@@ -29,7 +29,7 @@ class Tabelog:
             return False
 
         soup = BeautifulSoup(r.content, 'html.parser') # データ抽出,子要素の取得
-        soup_a_list = soup.find_all('a', class_='list-rst__rst-name-target', limit=2) # 店名一覧
+        soup_a_list = soup.find_all('a', class_='list-rst__rst-name-target') # 店名一覧
 
         if len(soup_a_list) == 0:
             return False
