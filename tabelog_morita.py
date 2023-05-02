@@ -114,12 +114,12 @@ class Tabelog:
 
 
 def main():
-    tokyo_ramen_review = Tabelog(base_url="https://tabelog.com/tokyo/A1301/rstLst/ramen/1/?SrtT=rt&Srt=D&sort_mode=1")
+    tokyo_ramen_review = Tabelog(base_url="https://tabelog.com/tokyo/R9/rstLst/ramen/1/?SrtT=rt")
     # A1301 ~ A1331 が　東京の地域別
     # C13101 ~ C13123 が　東京の23区
     # Rから始まる路線別もあるがコードが並んでいない e.g. 山手線=R9、日比谷線=R1096)
     # ramenの後の数字がページ番号 (最大でも60pしか表示されないらしい)
-    # ランキングでソートしている
+    # SrtTの引数でソートしている、rtはランキングでrvcnが口コミ人数
 
     tokyo_ramen_review.df.to_csv("output/tokyo_ramen_review_A1301_1.csv",  index=False, encoding="utf_8_sig") # CSV保存
 
