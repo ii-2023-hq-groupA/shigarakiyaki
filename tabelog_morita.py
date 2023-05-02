@@ -11,9 +11,11 @@ class Tabelog:
         self.store_name = ""
         self.station = ""
         self.address = ""
+        self.latitude = 0
+        self.longitude = 0
         self.review_cnt = 0
         self.review_list = list(range(10))
-        self.columns = ["store_id", "store_name", "station", "address", "review_cnt",
+        self.columns = ["store_id", "store_name", "station", "address", "review_cnt", "latitude", "longtitude",
                         "review_1", "review_2", "review_3", "review_4", "review_5",
                         "review_6", "review_7", "review_8", "review_9", "review_10"] # 店名、最寄駅、住所、レビュー件数(最大10件)、レビュー内容
 
@@ -29,7 +31,7 @@ class Tabelog:
             return False
 
         soup = BeautifulSoup(r.content, 'html.parser') # データ抽出,子要素の取得
-        soup_a_list = soup.find_all('a', class_='list-rst__rst-name-target') # 店名一覧
+        soup_a_list = soup.find_all('a', class_='list-rst__rst-name-target', limit=2) # 店名一覧
 
         if len(soup_a_list) == 0:
             return False
@@ -53,13 +55,21 @@ class Tabelog:
 
         pick_soup = BeautifulSoup(pick_r.content, 'html.parser', from_encoding='utf-8') # データ抽出,子要素の取得
 
+        ll= pick_soup.find("script",{"type" : "application/ld+json"}).string
+        lat_st = ll.find("latitude")+10
+        lat_ed = ll.find(",",lat_st)
+        self.latitude = ll[lat_st:lat_ed] # 店舗緯度取得
+        lon_st = ll.find("longitude")+11
+        lon_ed = ll.find("}",lon_st)
+        self.longitude = ll[lon_st:lon_ed] # 店舗経度取得
+
         self.station = pick_soup.find('span', class_="linktree__parent-target-text").contents[0] # 最寄駅を抽出
 
         pick_address = pick_soup.find('p', class_="rstinfo-table__address").contents  # 店の住所を抽出
         _address = ""
         for address in pick_address:
             _address += address.getText()
-        self.address = _address
+        self.address = _address.replace(" ", "")
 
         ### 口コミページへ遷移 ###
         pick_url = pick_soup.select("#review")[0].get("href") # 口コミへ飛ぶURL
@@ -93,7 +103,7 @@ class Tabelog:
 
     def make_df(self):
         self.store_id = str(self.store_id_num).zfill(8) #0パディング
-        se = pd.Series([self.store_id, self.store_name, self.station, self.address, self.review_cnt,
+        se = pd.Series([self.store_id, self.store_name, self.station, self.address, self.review_cnt, self.latitude, self.longitude,
                         self.review_list[0], self.review_list[1], self.review_list[2],self.review_list[3], self.review_list[4],
                         self.review_list[5],self.review_list[6], self.review_list[7], self.review_list[8], self.review_list[9]],
                         self.columns) # 行を作成
