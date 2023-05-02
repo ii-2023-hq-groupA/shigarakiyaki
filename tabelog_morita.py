@@ -31,7 +31,7 @@ class Tabelog:
             return False
 
         soup = BeautifulSoup(r.content, 'html.parser') # データ抽出,子要素の取得
-        soup_a_list = soup.find_all('a', class_='list-rst__rst-name-target', limit=10) # 店名一覧
+        soup_a_list = soup.find_all('a', class_='list-rst__rst-name-target') # 店名一覧
 
         if len(soup_a_list) == 0:
             return False
@@ -50,16 +50,16 @@ class Tabelog:
     def scrape_item(self, item_url):
         ### 各店のページへ遷移 ###
         pick_r = requests.get(item_url) # データ取得
-        if pick_r.status_code != requests.codes.ok: #もし存在しないリンクを踏んだらエラーを返す
+        if pick_r.status_code != requests.codes.ok: # もし存在しないリンクを踏んだらエラーを返す
             return False
 
         pick_soup = BeautifulSoup(pick_r.content, 'html.parser', from_encoding='utf-8') # データ抽出,子要素の取得
 
         ll= pick_soup.find("script",{"type" : "application/ld+json"}).string
-        lat_st = ll.find("latitude")+10
+        lat_st = ll.find("latitude") + 10
         lat_ed = ll.find(",",lat_st)
         self.latitude = ll[lat_st:lat_ed] # 店舗緯度取得
-        lon_st = ll.find("longitude")+11
+        lon_st = ll.find("longitude") + 11
         lon_ed = ll.find("}",lon_st)
         self.longitude = ll[lon_st:lon_ed] # 店舗経度取得
 
@@ -80,7 +80,6 @@ class Tabelog:
         pick_comment_soup = BeautifulSoup(pick_comment.content, 'html.parser') # データ抽出,子要素の取得
 
         ### 題名と全文を拾う ###
-
         pick_link_list = pick_comment_soup.find_all('a', class_="rvw-item__title-target", limit=10) # 口コミの詳細に飛ぶリンク、ここでは最大10
         self.review_cnt = len(pick_link_list) # 抽出したレビューの件数
         for i in range(len(pick_link_list)):
@@ -91,10 +90,8 @@ class Tabelog:
 
             full_comment_soup = BeautifulSoup(full_comment.content, 'html.parser') # データ抽出,子要素の取得
             full_comment_title = full_comment_soup.find_all('p', class_="rvw-item__title", limit=1) #　何回通っていても拾う題名は1つのみ
-            full_comment_title = full_comment_title[0].getText()
             full_comment_text = full_comment_soup.find_all('div', class_="rvw-item__rvw-comment rvw-item__rvw-comment--custom", limit=1) #　同じく拾うコメントは1つのみ
-            full_comment_text = full_comment_text[0].getText()
-            self.review_list[i] = full_comment_title + full_comment_text
+            self.review_list[i] = full_comment_title[0].getText() + full_comment_text[0].getText()
 
         self.make_df()
 
@@ -102,10 +99,10 @@ class Tabelog:
 
 
     def make_df(self):
-        self.store_id = str(self.store_id_num).zfill(8) #0パディング
+        self.store_id = str(self.store_id_num).zfill(8) # 0パディング
         se = pd.Series([self.store_id, self.store_name, self.station, self.address, self.review_cnt, self.latitude, self.longitude,
-                        self.review_list[0], self.review_list[1], self.review_list[2],self.review_list[3], self.review_list[4],
-                        self.review_list[5],self.review_list[6], self.review_list[7], self.review_list[8], self.review_list[9]],
+                        self.review_list[0], self.review_list[1], self.review_list[2], self.review_list[3], self.review_list[4],
+                        self.review_list[5], self.review_list[6], self.review_list[7], self.review_list[8], self.review_list[9]],
                         self.columns) # 行を作成
         self.df = pd.concat([self.df, pd.DataFrame(se).T])
         # self.df = self.df.append(se, self.columns) # 最新のpandasでなければappendも使える (はず)
@@ -121,6 +118,7 @@ def main():
     # ramenの後の数字がページ番号 (最大でも60pしか表示されないらしい)
     # SrtTの引数でソートしている、rtはランキングでrvcnが口コミ人数
 
-    tokyo_ramen_review.df.to_csv("output/tokyo_ramen_review_A1301_1.csv",  index=False, encoding="utf_8_sig") # CSV保存
+    tokyo_ramen_review.df.to_csv("output/tokyo_ramen_review_A1301_1.csv", index=False, encoding="utf_8_sig") # CSV保存
 
-main()
+if __name__ == '__main__':
+    main()
